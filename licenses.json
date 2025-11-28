@@ -1,0 +1,16 @@
+{
+  "MORRIS-CSMXVIP": {
+    "user": "BOB",
+    "tier": "lifetime",
+    "expiry": "2099-12-31",
+    "status": "active",
+    "createdAt": "2025-11-28"
+  },
+  "MORRIS-OWNER805805": {
+    "user": "TrialUser",
+    "tier": "trial",
+    "expiry": "2024-12-05",
+    "status": "active",
+    "createdAt": "2024-11-28"
+  }
+}
