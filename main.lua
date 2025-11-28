@@ -266,7 +266,7 @@ if not isValid then
     
     -- Kick local player if running on client
     if Players.LocalPlayer then
-        Players.LocalPlayer:Kick("MORRIS GUARD\n\nLicense verification failed!\n\n" .. message .. "\n\nPlease contact the script owner.")
+        Players.LocalPlayer:Kick("MORRIS GUARD\n\nKEY NOT VALID!!\n\n" .. message .. "\n\nPlease contact the script owner.")
     end
     
     return -- Stop script execution
