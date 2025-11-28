@@ -10,7 +10,7 @@ local CONFIG = {
     LICENSE_DB_URL = "https://raw.githubusercontent.com/morrisey233/monitorserver/main/licenses.json",
     MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/morrisey233/monitorserver/main/main.lua",
     LOG_WEBHOOK = "https://discord.com/api/webhooks/1443821638524211250/kZ6vVZyXzVKDxaK3PeMH6HwDg8Un-v-zZYta_gBXXWBafM2_bLoAkeUv9i_VnGB3zDYE",
-    VERSION = "2.0.0"
+    VERSION = "1.0.0"
 }
 
 -- ════════════════════════════════════════════════════════
@@ -23,22 +23,6 @@ local function getHWID()
         return game:GetService("RbxAnalyticsService"):GetClientId()
     end)
     return success and hwid or "UNKNOWN"
-end
-
-local function saveLocal(data)
-    pcall(function()
-        if not isfolder("MorrisData") then makefolder("MorrisData") end
-        writefile("MorrisData/session.json", HttpService:JSONEncode(data))
-    end)
-end
-
-local function loadLocal()
-    local success, data = pcall(function()
-        if isfile("MorrisData/session.json") then
-            return HttpService:JSONDecode(readfile("MorrisData/session.json"))
-        end
-    end)
-    return success and data or nil
 end
 
 local function notify(text)
@@ -61,19 +45,19 @@ local function httpRequest(url, method, headers, body)
     
     for _, func in pairs(funcs) do
         if func then
-            local success, result = pcall(function()
-                return func({
+            local success = pcall(function()
+                func({
                     Url = url,
                     Method = method,
                     Headers = headers,
                     Body = body
                 })
             end)
-            if success then return true, result end
+            if success then return true end
         end
     end
     
-    return false, nil
+    return false
 end
 
 -- ════════════════════════════════════════════════════════
@@ -150,12 +134,10 @@ end
 -- ════════════════════════════════════════════════════════
 
 local function createGUI()
-    -- Protect GUI creation
     local success, Screen = pcall(function()
         local s = Instance.new("ScreenGui")
         s.Name = "MorrisAuth"
         
-        -- Try gethui() first (best), then PlayerGui (fallback)
         if gethui then
             s.Parent = gethui()
         else
@@ -329,27 +311,7 @@ end
 local function main()
     print("👑 MORRIS MONITOR v" .. CONFIG.VERSION)
     
-    -- Auto-login
-    local saved = loadLocal()
-    if saved and saved.key and saved.webhook then
-        local valid, licenseData = validateKey(saved.key)
-        if valid then
-            sendLog(saved.key, licenseData)
-            
-            local success, script = pcall(function()
-                return game:HttpGet(CONFIG.MAIN_SCRIPT_URL)
-            end)
-            
-            if success then
-                getfenv().WEBHOOK_URL = saved.webhook
-                getfenv().LICENSE_KEY = saved.key
-                loadstring(script)()
-                return
-            end
-        end
-    end
-    
-    -- Show GUI
+    -- ALWAYS SHOW GUI (NO AUTO-LOGIN)
     local GUI = createGUI()
     if not GUI then
         warn("GUI creation failed")
@@ -361,41 +323,45 @@ local function main()
     
     GUI.Btn.MouseButton1Click:Connect(function()
         if not validatedKey then
-            -- Step 1: Validate Key
+            -- STEP 1: VALIDATE KEY
             local key = GUI.KeyBox.Text:upper():gsub("%s+", "")
             
             if key == "" then
-                GUI.Status.Text = "Enter a key!"
+                GUI.Status.Text = "❌ Enter a key!"
                 GUI.Status.TextColor3 = Color3.fromRGB(255, 100, 100)
                 return
             end
             
-            GUI.Status.Text = "Validating..."
+            GUI.Status.Text = "⏳ Validating..."
+            GUI.Status.TextColor3 = Color3.fromRGB(255, 200, 100)
             GUI.Btn.Text = "..."
             wait(0.5)
             
             local valid, result = validateKey(key)
             
             if not valid then
-                GUI.Status.Text = result
+                GUI.Status.Text = "❌ " .. result
                 GUI.Status.TextColor3 = Color3.fromRGB(255, 100, 100)
                 GUI.Btn.Text = "VALIDATE"
                 notify("Invalid: " .. result)
                 return
             end
             
+            -- KEY VALID
             validatedKey = key
             validatedLicense = result
             
-            GUI.Status.Text = "Key valid! Enter webhook"
+            GUI.Status.Text = "✅ Valid! Enter webhook"
             GUI.Status.TextColor3 = Color3.fromRGB(100, 255, 100)
             notify("Key valid!")
             
+            -- Show webhook input
             GUI.WebhookLabel.Visible = true
             GUI.WebhookBox.Visible = true
             GUI.Btn.Text = "START"
             GUI.Btn.BackgroundColor3 = Color3.fromRGB(60, 180, 100)
             
+            -- Expand GUI
             pcall(function()
                 TweenService:Create(GUI.Main, TweenInfo.new(0.3), {
                     Size = UDim2.new(0, 380, 0, 310)
@@ -409,23 +375,26 @@ local function main()
             end)
             
         else
-            -- Step 2: Start
+            -- STEP 2: VALIDATE WEBHOOK & START
             local webhook = GUI.WebhookBox.Text:gsub("%s+", "")
             
             if webhook == "" or not webhook:match("discord%.com/api/webhooks") then
-                GUI.Status.Text = "Invalid webhook!"
+                GUI.Status.Text = "❌ Invalid webhook!"
                 GUI.Status.TextColor3 = Color3.fromRGB(255, 100, 100)
+                notify("Invalid webhook!")
                 return
             end
             
-            GUI.Status.Text = "Starting..."
+            GUI.Status.Text = "🚀 Starting..."
+            GUI.Status.TextColor3 = Color3.fromRGB(100, 255, 100)
             
+            -- Send log
             sendLog(validatedKey, validatedLicense)
-            saveLocal({key = validatedKey, webhook = webhook})
             
             wait(0.5)
             GUI.Screen:Destroy()
             
+            -- Load main script
             local success, script = pcall(function()
                 return game:HttpGet(CONFIG.MAIN_SCRIPT_URL)
             end)
@@ -434,9 +403,9 @@ local function main()
                 getfenv().WEBHOOK_URL = webhook
                 getfenv().LICENSE_KEY = validatedKey
                 loadstring(script)()
-                notify("Monitor started!")
+                notify("✅ Monitor started!")
             else
-                notify("Failed to load script!")
+                notify("❌ Failed to load!")
             end
         end
     end)
@@ -446,7 +415,7 @@ local function main()
     end)
 end
 
--- Run with error handling
+-- Run
 local success, err = pcall(main)
 if not success then
     warn("Error:", err)
