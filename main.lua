@@ -281,26 +281,3 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
 
 print("✅ Dashboard active!")
-```
-
-## 🔐 **Fitur License Verification:**
-
-### ✅ **Yang Dicek:**
-1. ❌ LICENSE_KEY kosong atau default
-2. ❌ WEBHOOK_URL kosong atau default  
-3. ❌ LICENSE_KEY terlalu pendek (kurang dari 10 karakter)
-
-### 🚫 **Kalo Gagal:**
-1. **Warning** di console
-2. **Kick player** dengan pesan error yang jelas
-3. **Script berhenti** langsung (ga jalan)
-
-### 💬 **Pesan Kick:**
-```
-❌ Morris Monitor
-
-License verification failed!
-
-No license key provided
-
-Please contact the script owner.
