@@ -15,6 +15,29 @@ local CONFIG = {
 }
 
 -- ════════════════════════════════════════════════════════
+-- 🔐 LICENSE VERIFICATION
+-- ════════════════════════════════════════════════════════
+
+local function verifyLicense()
+    -- Check if LICENSE_KEY exists
+    if not CONFIG.LICENSE_KEY or CONFIG.LICENSE_KEY == "" or CONFIG.LICENSE_KEY == "LICENSE_KEY" then
+        return false, "No license key provided"
+    end
+    
+    -- Check if WEBHOOK_URL exists
+    if not CONFIG.WEBHOOK_URL or CONFIG.WEBHOOK_URL == "" or CONFIG.WEBHOOK_URL == "WEBHOOK_URL" then
+        return false, "No webhook URL provided"
+    end
+    
+    -- Additional validation: check license format (optional)
+    if #CONFIG.LICENSE_KEY < 10 then
+        return false, "Invalid license key format"
+    end
+    
+    return true, "License verified"
+end
+
+-- ════════════════════════════════════════════════════════
 -- 💾 CACHE SYSTEM (PERFORMANCE BOOST)
 -- ════════════════════════════════════════════════════════
 
@@ -153,7 +176,10 @@ local function sendUpdate(eventType, playerName)
     
     -- Field 3: Server Statistics
     local jobId = game.JobId or "N/A"
-    local region = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(Players.LocalPlayer) or "Auto"
+    local region = "Auto"
+    pcall(function()
+        region = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(Players.LocalPlayer) or "Auto"
+    end)
     
     fields[#fields + 1] = {
         name = "📊 Server Statistics",
@@ -225,10 +251,28 @@ task.spawn(function()
 end)
 
 -- ════════════════════════════════════════════════════════
--- 🚀 INITIALIZE
+-- 🚀 INITIALIZE WITH LICENSE CHECK
 -- ════════════════════════════════════════════════════════
 
 print("👑 Morris Monitor - Advanced Dashboard")
+print("🔐 Verifying license...")
+
+local isValid, message = verifyLicense()
+
+if not isValid then
+    warn("❌ LICENSE VERIFICATION FAILED: " .. message)
+    warn("❌ Script terminated - Invalid or missing license")
+    warn("⚠️ Please provide a valid LICENSE_KEY and WEBHOOK_URL")
+    
+    -- Kick local player if running on client
+    if Players.LocalPlayer then
+        Players.LocalPlayer:Kick("❌ Morris Monitor\n\nLicense verification failed!\n\n" .. message .. "\n\nPlease contact the script owner.")
+    end
+    
+    return -- Stop script execution
+end
+
+print("✅ License verified: " .. message)
 
 task.wait(1)
 sendUpdate("initial", "System")
@@ -237,3 +281,26 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
 
 print("✅ Dashboard active!")
+```
+
+## 🔐 **Fitur License Verification:**
+
+### ✅ **Yang Dicek:**
+1. ❌ LICENSE_KEY kosong atau default
+2. ❌ WEBHOOK_URL kosong atau default  
+3. ❌ LICENSE_KEY terlalu pendek (kurang dari 10 karakter)
+
+### 🚫 **Kalo Gagal:**
+1. **Warning** di console
+2. **Kick player** dengan pesan error yang jelas
+3. **Script berhenti** langsung (ga jalan)
+
+### 💬 **Pesan Kick:**
+```
+❌ Morris Monitor
+
+License verification failed!
+
+No license key provided
+
+Please contact the script owner.
