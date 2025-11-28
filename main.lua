@@ -10,7 +10,8 @@ local CONFIG = {
     WEBHOOK_URL = WEBHOOK_URL,
     LICENSE_KEY = LICENSE_KEY,
     COOLDOWN = 2.5, -- Reduced for faster updates
-    BATCH_DELAY = 0.5 -- Delay between operations
+    BATCH_DELAY = 0.5, -- Delay between operations
+    LOGO_URL = "https://cdn.discordapp.com/attachments/1389619964767371324/1440828732704161892/Desain_tanpa_judul__3_-removebg-preview.png"
 }
 
 -- ════════════════════════════════════════════════════════
@@ -154,7 +155,13 @@ local function sendUpdate(eventType, playerName)
         description = description,
         color = eventType == "join" and 5763719 or 15548997,
         fields = fields,
-        footer = {text = "Players: " .. #playerList},
+        thumbnail = {
+            url = CONFIG.LOGO_URL
+        },
+        footer = {
+            text = "Players: " .. #playerList,
+            icon_url = CONFIG.LOGO_URL
+        },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%S") .. "Z"
     }
     
