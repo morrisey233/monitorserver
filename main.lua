@@ -1,8 +1,3 @@
---[[
-    🎣 MORRIS MONITOR - MAIN
-    100% Working Version
-]]
-
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
@@ -14,7 +9,6 @@ local CONFIG = {
 
 local lastUpdate = 0
 
--- HTTP Request function
 local function httpRequest(url, method, headers, body)
     local funcs = {
         request,
